@@ -160,7 +160,7 @@ func buildImageMeteringPayload(
 		RequestTime:      requestTime,
 		ResponseTime:     requestTime.Add(duration),
 		RequestDuration:  duration.Milliseconds(),
-		MiddlewareSource: "revenium-middleware-fal-go",
+		MiddlewareSource: GetMiddlewareSource(),
 	}
 
 	// Add image-specific billing fields (TOP LEVEL per API contract)
@@ -226,6 +226,15 @@ func buildImageMeteringPayload(
 		if taskID, ok := metadata["taskId"].(string); ok {
 			payload.TaskID = taskID
 		}
+		if videoJobID, ok := metadata["videoJobId"].(string); ok {
+			payload.VideoJobID = videoJobID
+		}
+		if audioJobID, ok := metadata["audioJobId"].(string); ok {
+			payload.AudioJobID = audioJobID
+		}
+		if responseQualityScore, ok := metadata["responseQualityScore"].(float64); ok {
+			payload.ResponseQualityScore = &responseQualityScore
+		}
 	}
 
 	return payload
@@ -250,7 +259,7 @@ func buildVideoMeteringPayload(
 		RequestTime:      requestTime,
 		ResponseTime:     requestTime.Add(duration),
 		RequestDuration:  duration.Milliseconds(),
-		MiddlewareSource: "revenium-middleware-fal-go",
+		MiddlewareSource: GetMiddlewareSource(),
 	}
 
 	// Add video-specific billing fields (TOP LEVEL per API contract)
@@ -317,6 +326,15 @@ func buildVideoMeteringPayload(
 		}
 		if taskID, ok := metadata["taskId"].(string); ok {
 			payload.TaskID = taskID
+		}
+		if videoJobID, ok := metadata["videoJobId"].(string); ok {
+			payload.VideoJobID = videoJobID
+		}
+		if audioJobID, ok := metadata["audioJobId"].(string); ok {
+			payload.AudioJobID = audioJobID
+		}
+		if responseQualityScore, ok := metadata["responseQualityScore"].(float64); ok {
+			payload.ResponseQualityScore = &responseQualityScore
 		}
 	}
 

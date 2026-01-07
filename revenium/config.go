@@ -73,7 +73,7 @@ func (c *Config) loadFromEnv() error {
 		c.FalAPIKey = os.Getenv("FAL_API_KEY")
 	}
 	if c.FalBaseURL == "" {
-		c.FalBaseURL = getEnvOrDefault("FAL_BASE_URL", "https://api.fal.ai")
+		c.FalBaseURL = getEnvOrDefault("FAL_BASE_URL", "https://fal.run")
 	}
 
 	if c.ReveniumAPIKey == "" {

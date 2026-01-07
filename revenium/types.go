@@ -112,6 +112,12 @@ type MeteringPayload struct {
 	CredentialAlias     string `json:"credentialAlias,omitempty"`
 	Subscriber       map[string]interface{} `json:"subscriber,omitempty"`
 	TaskID           string                 `json:"taskId,omitempty"`
+	// Multimodal job identifiers
+	VideoJobID       string                 `json:"videoJobId,omitempty"`
+	AudioJobID       string                 `json:"audioJobId,omitempty"`
+
+	// Quality metrics
+	ResponseQualityScore *float64 `json:"responseQualityScore,omitempty"`
 
 	// Cost overrides
 	TotalCost        *float64 `json:"totalCost,omitempty"`

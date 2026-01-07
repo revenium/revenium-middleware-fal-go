@@ -12,6 +12,7 @@ type ReveniumFal struct {
 	falClient      *FalClient
 	meteringClient *MeteringClient
 	mu             sync.RWMutex
+	wg             sync.WaitGroup
 }
 
 var (
@@ -141,7 +142,11 @@ func (r *ReveniumFal) GenerateImage(ctx context.Context, model string, request *
 	duration := time.Since(startTime)
 
 	// Send metering data asynchronously (fire-and-forget)
-	go r.sendImageMetering(resp, model, metadata, duration, startTime)
+	r.wg.Add(1)
+	go func() {
+		defer r.wg.Done()
+		r.sendImageMetering(resp, model, metadata, duration, startTime)
+	}()
 
 	return resp, nil
 }
@@ -164,7 +169,11 @@ func (r *ReveniumFal) GenerateVideo(ctx context.Context, model string, request *
 	duration := time.Since(startTime)
 
 	// Send metering data asynchronously (fire-and-forget)
-	go r.sendVideoMetering(resp, model, metadata, duration, startTime)
+	r.wg.Add(1)
+	go func() {
+		defer r.wg.Done()
+		r.sendVideoMetering(resp, model, metadata, duration, startTime)
+	}()
 
 	return resp, nil
 }
@@ -199,8 +208,16 @@ func (r *ReveniumFal) sendVideoMetering(resp *FalVideoResponse, model string, me
 	}
 }
 
-// Close closes the client and cleans up resources
+// Flush waits for all pending metering goroutines to complete.
+// Call this before application shutdown to ensure all metering data is sent.
+func (r *ReveniumFal) Flush() {
+	r.wg.Wait()
+}
+
+// Close closes the client and cleans up resources.
+// It calls Flush() to ensure all pending metering operations complete.
 func (r *ReveniumFal) Close() error {
+	r.Flush()
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return nil
