@@ -1,258 +1,198 @@
-# Revenium Middleware - Fal.ai (Go)
+# Revenium Middleware for Fal.ai (Go)
 
-Official Go middleware for integrating [Fal.ai](https://fal.ai) with [Revenium](https://revenium.ai) AI FinOps metering.
+A lightweight, production-ready middleware that adds **Revenium metering and tracking** to Fal.ai API calls.
+
+[![Go Version](https://img.shields.io/badge/Go-1.21%2B-blue)](https://golang.org/)
+[![Documentation](https://img.shields.io/badge/docs-revenium.io-blue)](https://docs.revenium.io)
+[![Website](https://img.shields.io/badge/website-revenium.ai-blue)](https://www.revenium.ai)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
 
-- Support for Fal.ai image generation models (Flux, SDXL, etc.)
-- Support for Fal.ai video generation models (Kling, Mochi, etc.)
-- Automatic metering to Revenium API
-- Context-based metadata tracking
-- Configurable via environment variables or code
-- Thread-safe concurrent operations
-- Comprehensive error handling
-- Detailed logging support
+- **Seamless Integration** - Drop-in middleware with minimal code changes
+- **Automatic Metering** - Tracks all API calls with detailed usage metrics
+- **Image Generation** - Full support for Flux, SDXL, and other image models
+- **Video Generation** - Support for Kling, Mochi, and other video models
+- **Custom Metadata** - Add custom tracking metadata to any request
+- **Production Ready** - Battle-tested and optimized for production use
+- **Type Safe** - Built with Go's strong typing system
 
-## Installation
+## Getting Started (5 minutes)
+
+### Step 1: Create Your Project
+
+```bash
+mkdir my-fal-app
+cd my-fal-app
+go mod init my-fal-app
+```
+
+### Step 2: Install Dependencies
 
 ```bash
 go get github.com/revenium/revenium-middleware-fal-go
+go mod tidy
 ```
 
-## Quick Start
+### Step 3: Create Environment File
 
-### 1. Set up environment variables
-
-Create a `.env` file:
+Create `.env` file in your project root:
 
 ```bash
-# Fal.ai Configuration
-FAL_API_KEY=your-fal-api-key-here
+# Required - Get from https://fal.ai/dashboard/keys
+FAL_API_KEY=your_fal_api_key_here
 
-# Revenium Configuration
-REVENIUM_METERING_API_KEY=hak_your_api_key_here
+# Required - Get from Revenium dashboard (https://app.revenium.ai)
+REVENIUM_METERING_API_KEY=your_revenium_api_key_here
+
+# Optional - Revenium API base URL (defaults to production)
+REVENIUM_METERING_BASE_URL=https://api.revenium.ai
 ```
 
-### 2. Initialize the middleware
+**Replace the API keys with your actual keys!**
 
-```go
-package main
+> **Automatic .env Loading**: The middleware automatically loads `.env` files from your project directory. No need to manually export environment variables!
 
-import (
-    "context"
-    "fmt"
-    "log"
+## Examples
 
-    "github.com/revenium/revenium-middleware-fal-go/revenium"
-)
+This repository includes runnable examples demonstrating how to use the Revenium middleware with Fal.ai:
 
-func main() {
-    // Initialize middleware (loads from .env automatically)
-    if err := revenium.Initialize(); err != nil {
-        log.Fatalf("Failed to initialize: %v", err)
-    }
+- **[Examples Guide](./examples/README.md)** - Detailed guide for running examples
+- **Go Examples**: `examples/basic/`
 
-    // Get the client
-    client, err := revenium.GetClient()
-    if err != nil {
-        log.Fatalf("Failed to get client: %v", err)
-    }
+**Run examples after setup:**
 
-    // Create a request
-    ctx := context.Background()
-    request := &revenium.FalRequest{
-        Prompt:    "A serene mountain landscape at sunset",
-        ImageSize: "landscape_4_3",
-        NumImages: 1,
-    }
+```bash
+# Clone this repository:
+git clone https://github.com/revenium/revenium-middleware-fal-go.git
+cd revenium-middleware-fal-go
+go mod download
+go mod tidy
 
-    // Generate image
-    resp, err := client.GenerateImage(ctx, "flux/dev", request)
-    if err != nil {
-        log.Fatalf("Failed to generate image: %v", err)
-    }
-
-    fmt.Printf("Generated %d image(s)\n", len(resp.Images))
-    for _, img := range resp.Images {
-        fmt.Printf("Image URL: %s\n", img.URL)
-    }
-}
+# Run examples:
+go run examples/basic/main.go
 ```
 
-## Usage
+See **[Examples Guide](./examples/README.md)** for detailed setup instructions and what each example demonstrates.
+
+## What Gets Tracked
+
+The middleware automatically captures:
+
+- **Image Count**: Number of images generated per request
+- **Image Dimensions**: Width and height of generated images
+- **Video Duration**: Length of generated videos in seconds
+- **Request Duration**: Total time for each API call
+- **Model Information**: Which Fal.ai model was used
+- **Custom Metadata**: Business context you provide
+- **Error Tracking**: Failed requests and error details
+
+## Environment Variables
+
+### Required
+
+```bash
+FAL_API_KEY=your_fal_api_key_here
+REVENIUM_METERING_API_KEY=your_revenium_api_key_here
+```
+
+### Optional
+
+```bash
+# Fal.ai API base URL (defaults to production)
+FAL_BASE_URL=https://api.fal.ai
+
+# Revenium API base URL (defaults to production)
+REVENIUM_METERING_BASE_URL=https://api.revenium.ai
+
+# Default metadata for all requests
+REVENIUM_ORGANIZATION_ID=my-company
+REVENIUM_PRODUCT_ID=my-app
+
+# Debug logging
+REVENIUM_LOG_LEVEL=INFO
+```
+
+## Supported Models
 
 ### Image Generation
-
-```go
-// Create image generation request
-request := &revenium.FalRequest{
-    Prompt:         "A futuristic city at night",
-    ImageSize:      "landscape_4_3",
-    NumImages:      2,
-    GuidanceScale:  7.5,
-    NumInferenceSteps: 30,
-    EnableSafetyChecker: true,
-}
-
-// Generate with Flux model
-resp, err := client.GenerateImage(ctx, "flux/dev", request)
-if err != nil {
-    log.Fatalf("Error: %v", err)
-}
-
-// Access generated images
-for _, img := range resp.Images {
-    fmt.Printf("URL: %s, Size: %dx%d\n", img.URL, img.Width, img.Height)
-}
-```
-
-### Video Generation
-
-```go
-// Create video generation request
-request := &revenium.FalRequest{
-    Prompt: "A drone flying over a futuristic city",
-}
-
-// Generate with Kling model
-resp, err := client.GenerateVideo(ctx, "kling-video/v1/standard/text-to-video", request)
-if err != nil {
-    log.Fatalf("Error: %v", err)
-}
-
-// Access generated video
-fmt.Printf("Video URL: %s\n", resp.Video.URL)
-fmt.Printf("Duration: %.2f seconds\n", resp.Video.Duration)
-```
-
-### Adding Metadata for Tracking
-
-```go
-// Create context with business metadata
-metadata := map[string]interface{}{
-    "organizationId": "org-123",
-    "productId":      "product-456",
-    "subscriber": map[string]interface{}{
-        "id":    "user-789",
-        "email": "user@example.com",
-    },
-    "taskType": "image-generation",
-}
-ctx := revenium.WithUsageMetadata(context.Background(), metadata)
-
-// Make request with metadata
-resp, err := client.GenerateImage(ctx, "flux/dev", request)
-```
-
-## Supported Fal.ai Models
-
-### Image Generation Models
 
 - `flux/dev` - Flux image generation
 - `flux-pro` - Flux Pro (higher quality)
 - `stable-diffusion-xl` - Stable Diffusion XL
 
-### Video Generation Models
+### Video Generation
 
 - `kling-video/v1/standard/text-to-video` - Kling video generation
 - `mochi-v1` - Mochi video generation
 
-## Configuration
+## Troubleshooting
 
-### Environment Variables
+### Metering data not appearing in Revenium dashboard
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `FAL_API_KEY` | Yes | - | Your Fal.ai API key |
-| `FAL_BASE_URL` | No | `https://api.fal.ai` | Fal.ai API base URL |
-| `REVENIUM_METERING_API_KEY` | Yes | - | Your Revenium API key (starts with `hak_`) |
-| `REVENIUM_METERING_BASE_URL` | No | `https://api.revenium.ai` | Revenium API base URL |
-| `REVENIUM_ORGANIZATION_ID` | No | - | Your organization ID |
-| `REVENIUM_PRODUCT_ID` | No | - | Your product ID |
-| `REVENIUM_LOG_LEVEL` | No | `INFO` | Log level (`DEBUG`, `INFO`, `WARN`, `ERROR`) |
+**Problem**: Your app runs successfully but no data appears in Revenium.
 
-### Programmatic Configuration
+**Solution**: The middleware sends metering data asynchronously in the background. If your program exits too quickly, the data won't be sent. Add a delay before exit:
 
 ```go
-err := revenium.Initialize(
-    revenium.WithFalAPIKey("your-fal-key"),
-    revenium.WithReveniumAPIKey("hak_your_revenium_key"),
-    revenium.WithReveniumOrgID("org-123"),
-    revenium.WithReveniumProductID("product-456"),
-)
+// At the end of your main() function
+time.Sleep(2 * time.Second)
 ```
 
-## Metering
+### "Failed to initialize" error
 
-The middleware automatically sends metering data to Revenium for:
+Check your API keys:
 
-### Image Generation
-- Image count
-- Image dimensions (width/height)
-- Model used
-- Request duration
-
-### Video Generation
-- Video duration
-- Video dimensions (width/height)
-- Model used
-- Request duration
-
-Metering is done asynchronously in the background and won't block your API calls.
-
-## Error Handling
-
-```go
-resp, err := client.GenerateImage(ctx, "flux/dev", request)
-if err != nil {
-    // Check error type
-    if revenium.IsConfigError(err) {
-        log.Println("Configuration error:", err)
-    } else if revenium.IsMeteringError(err) {
-        log.Println("Metering error:", err)
-    } else {
-        log.Println("Other error:", err)
-    }
-    return
-}
+```bash
+echo $FAL_API_KEY
+echo $REVENIUM_METERING_API_KEY
 ```
 
-## Logging
-
-Set log level via environment:
+### Enable debug logging
 
 ```bash
 export REVENIUM_LOG_LEVEL=DEBUG
+go run main.go
 ```
-
-Or programmatically:
-
-```go
-revenium.SetLogLevel(revenium.LogLevelDebug)
-```
-
-## Examples
-
-See the [examples/](examples/) directory for complete working examples:
-
-- `examples/basic/main.go` - Basic image and video generation
 
 ## Requirements
 
-- Go 1.21 or higher
-- Fal.ai API key ([Get one here](https://fal.ai))
-- Revenium API key ([Sign up here](https://revenium.ai))
+- **Go**: 1.21 or higher
+- **Fal.ai API Key**: Get from [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys)
+- **Revenium API Key**: Get from [app.revenium.ai](https://app.revenium.ai)
 
-## Support
+## Documentation
 
-- Documentation: [https://docs.revenium.ai](https://docs.revenium.ai)
-- Issues: [GitHub Issues](https://github.com/revenium/revenium-middleware-fal-go/issues)
-- Email: support@revenium.io
+For more information and advanced usage:
 
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+- [Revenium Documentation](https://docs.revenium.io)
+- [Fal.ai Documentation](https://fal.ai/docs)
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Code of Conduct
+
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+
+## Security
+
+See [SECURITY.md](SECURITY.md)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For issues, feature requests, or contributions:
+
+- **GitHub Repository**: [revenium/revenium-middleware-fal-go](https://github.com/revenium/revenium-middleware-fal-go)
+- **Issues**: [Report bugs or request features](https://github.com/revenium/revenium-middleware-fal-go/issues)
+- **Documentation**: [docs.revenium.io](https://docs.revenium.io)
+- **Contact**: Reach out to the Revenium team for additional support
+
+---
+
+**Built by Revenium**
