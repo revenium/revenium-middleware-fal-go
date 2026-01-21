@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -141,6 +143,24 @@ func generateTransactionID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), time.Now().UnixNano()%1000)
 }
 
+// normalizeModelName ensures the model name has the required "fal-ai/" prefix
+// for Revenium's model naming convention. Fal.ai endpoint IDs use the format
+// "fal-ai/flux/dev" which matches the billing API's endpoint_id field.
+//
+// IMPORTANT: Users should pass the canonical model name with the "fal-ai/" prefix.
+// This function provides backward compatibility but will log a warning when
+// normalization is applied, as it indicates incorrect usage.
+func normalizeModelName(model string) string {
+	const falPrefix = "fal-ai/"
+	if strings.HasPrefix(model, falPrefix) {
+		return model
+	}
+	// Log warning when normalization is needed - indicates user passed incorrect format
+	Warn("Model name '%s' is missing 'fal-ai/' prefix. Use canonical format 'fal-ai/%s' for clarity. Auto-normalizing to '%s%s'",
+		model, model, falPrefix, model)
+	return falPrefix + model
+}
+
 // buildImageMeteringPayload builds a metering payload for image generation
 func buildImageMeteringPayload(
 	model string,
@@ -153,7 +173,7 @@ func buildImageMeteringPayload(
 		StopReason:       "END",
 		CostType:         "AI",
 		OperationType:    string(OperationTypeImage),
-		Model:            model,
+		Model:            normalizeModelName(model),
 		Provider:         "fal",
 		ModelSource:      "FAL",
 		TransactionID:    generateTransactionID(),
@@ -247,12 +267,13 @@ func buildVideoMeteringPayload(
 	metadata map[string]interface{},
 	duration time.Duration,
 	requestTime time.Time,
+	requestedDuration string,
 ) *MeteringPayload {
 	payload := &MeteringPayload{
 		StopReason:       "END",
 		CostType:         "AI",
 		OperationType:    string(OperationTypeVideo),
-		Model:            model,
+		Model:            normalizeModelName(model),
 		Provider:         "fal",
 		ModelSource:      "FAL",
 		TransactionID:    generateTransactionID(),
@@ -262,14 +283,42 @@ func buildVideoMeteringPayload(
 		MiddlewareSource: GetMiddlewareSource(),
 	}
 
+	// Parse requested duration from request (e.g., "5" or "10" seconds)
+	// This is REQUIRED for PER_SECOND billing even if Fal.ai doesn't return actual duration
+	var reqDurSeconds float64
+	if requestedDuration != "" {
+		// Trim whitespace to handle edge cases like " 5 " or "10\n"
+		trimmed := strings.TrimSpace(requestedDuration)
+		if parsed, err := strconv.ParseFloat(trimmed, 64); err == nil {
+			reqDurSeconds = parsed
+		} else {
+			Warn("Failed to parse requestedDuration '%s': %v - video billing may fail with 422", requestedDuration, err)
+		}
+	}
+
 	// Add video-specific billing fields (TOP LEVEL per API contract)
+	// RequestedDurationSeconds = what user asked for (from request)
+	// DurationSeconds = what was actually produced (from response, or fallback to requested)
+
+	// Set RequestedDurationSeconds from user's request (semantic: what they asked for)
+	if reqDurSeconds > 0 {
+		payload.RequestedDurationSeconds = &reqDurSeconds
+	}
+
+	// Set DurationSeconds from actual response, or fallback to requested
 	if videoResp != nil && videoResp.Video.Duration > 0 {
 		payload.DurationSeconds = &videoResp.Video.Duration
-		// RequestedDurationSeconds is required for PER_SECOND billing
-		// For Fal.ai, we use the actual duration as the requested duration
-		payload.RequestedDurationSeconds = &videoResp.Video.Duration
+		// If user didn't specify duration, use actual as fallback for requested
+		if payload.RequestedDurationSeconds == nil {
+			payload.RequestedDurationSeconds = &videoResp.Video.Duration
+		}
+	} else if reqDurSeconds > 0 {
+		// Fal.ai didn't return duration - use requested as best estimate for actual
+		payload.DurationSeconds = &reqDurSeconds
+	}
 
-		// Video dimensions go in attributes (metadata, not billing)
+	// Video dimensions go in attributes (metadata, not billing)
+	if videoResp != nil {
 		attrs := make(map[string]interface{})
 		if videoResp.Video.Width > 0 {
 			attrs["width"] = videoResp.Video.Width

@@ -7,12 +7,29 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // FalClient handles communication with the Fal.ai API
 type FalClient struct {
 	config     *Config
 	httpClient *http.Client
+}
+
+// getEndpointPath extracts the model path for URL construction.
+// Users should pass the canonical model name with "fal-ai/" prefix (e.g., "fal-ai/flux/dev")
+// for correct billing correlation. This function strips the prefix for URL construction
+// since the base URL already includes /fal-ai/.
+//
+// Examples:
+//   - "fal-ai/flux/dev" → "flux/dev" (strips prefix)
+//   - "flux/dev" → "flux/dev" (no change needed)
+func getEndpointPath(model string) string {
+	const falPrefix = "fal-ai/"
+	if strings.HasPrefix(model, falPrefix) {
+		return strings.TrimPrefix(model, falPrefix)
+	}
+	return model
 }
 
 // NewFalClient creates a new Fal.ai client
@@ -35,7 +52,9 @@ func NewFalClient(config *Config) (*FalClient, error) {
 
 // GenerateImage generates images using a Fal.ai model
 func (c *FalClient) GenerateImage(ctx context.Context, model string, request *FalRequest) (*FalImageResponse, error) {
-	endpoint := fmt.Sprintf("%s/fal-ai/%s", c.config.FalBaseURL, model)
+	// Strip fal-ai/ prefix if present (user may pass canonical name like "fal-ai/flux/dev")
+	// The URL already includes /fal-ai/ so we need just the model path
+	endpoint := fmt.Sprintf("%s/fal-ai/%s", c.config.FalBaseURL, getEndpointPath(model))
 
 	// Marshal request
 	requestBody, err := json.Marshal(request)
@@ -94,7 +113,9 @@ func (c *FalClient) GenerateImage(ctx context.Context, model string, request *Fa
 
 // GenerateVideo generates a video using a Fal.ai model
 func (c *FalClient) GenerateVideo(ctx context.Context, model string, request *FalRequest) (*FalVideoResponse, error) {
-	endpoint := fmt.Sprintf("%s/fal-ai/%s", c.config.FalBaseURL, model)
+	// Strip fal-ai/ prefix if present (user may pass canonical name like "fal-ai/kling-video/v1/standard/text-to-video")
+	// The URL already includes /fal-ai/ so we need just the model path
+	endpoint := fmt.Sprintf("%s/fal-ai/%s", c.config.FalBaseURL, getEndpointPath(model))
 
 	// Marshal request
 	requestBody, err := json.Marshal(request)

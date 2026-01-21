@@ -66,8 +66,10 @@ func generateImageExample(client *revenium.ReveniumFal) error {
 		EnableSafetyChecker: true,
 	}
 
-	// Generate image
-	resp, err := client.GenerateImage(ctx, "flux/dev", request)
+	// Generate image using canonical Fal.ai endpoint ID format
+	// IMPORTANT: Always use the full "fal-ai/" prefix (e.g., "fal-ai/flux/dev")
+	// This matches Fal.ai's billing API endpoint_id for accurate metering correlation
+	resp, err := client.GenerateImage(ctx, "fal-ai/flux/dev", request)
 	if err != nil {
 		return fmt.Errorf("failed to generate image: %w", err)
 	}
@@ -104,8 +106,9 @@ func generateVideoExample(client *revenium.ReveniumFal) error {
 		Duration: "5", // Shortest possible video (5 seconds)
 	}
 
-	// Generate video
-	resp, err := client.GenerateVideo(ctx, "kling-video/v1/standard/text-to-video", request)
+	// Generate video using canonical Fal.ai endpoint ID format
+	// IMPORTANT: Always use the full "fal-ai/" prefix for billing correlation
+	resp, err := client.GenerateVideo(ctx, "fal-ai/kling-video/v1/standard/text-to-video", request)
 	if err != nil {
 		return fmt.Errorf("failed to generate video: %w", err)
 	}
