@@ -168,11 +168,18 @@ func (r *ReveniumFal) GenerateVideo(ctx context.Context, model string, request *
 	// Calculate duration
 	duration := time.Since(startTime)
 
+	// Capture the requested duration before the goroutine
+	// Guard against nil request for defensive programming
+	var requestedDuration string
+	if request != nil {
+		requestedDuration = request.Duration
+	}
+
 	// Send metering data asynchronously (fire-and-forget)
 	r.wg.Add(1)
 	go func() {
 		defer r.wg.Done()
-		r.sendVideoMetering(resp, model, metadata, duration, startTime)
+		r.sendVideoMetering(resp, model, metadata, duration, startTime, requestedDuration)
 	}()
 
 	return resp, nil
@@ -194,14 +201,14 @@ func (r *ReveniumFal) sendImageMetering(resp *FalImageResponse, model string, me
 }
 
 // sendVideoMetering sends video metering data in the background
-func (r *ReveniumFal) sendVideoMetering(resp *FalVideoResponse, model string, metadata map[string]interface{}, duration time.Duration, startTime time.Time) {
+func (r *ReveniumFal) sendVideoMetering(resp *FalVideoResponse, model string, metadata map[string]interface{}, duration time.Duration, startTime time.Time, requestedDuration string) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			Error("Metering goroutine panic: %v", rec)
 		}
 	}()
 
-	payload := buildVideoMeteringPayload(model, resp, metadata, duration, startTime)
+	payload := buildVideoMeteringPayload(model, resp, metadata, duration, startTime, requestedDuration)
 
 	if err := r.meteringClient.SendVideoMetering(payload); err != nil {
 		Error("Failed to send video metering data: %v", err)
