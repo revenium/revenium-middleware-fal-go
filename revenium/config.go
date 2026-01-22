@@ -23,6 +23,14 @@ type Config struct {
 	ReveniumOrgID     string
 	ReveniumProductID string
 
+	// Prompt capture configuration (opt-in for analytics)
+	// When enabled, the following fields are added to metering payloads:
+	//   - inputMessages: JSON array with [{"role": "user", "content": "<prompt>"}] format
+	//   - outputResponse: Generated content URL(s)
+	//   - promptsTruncated: true if prompt exceeded 50,000 characters
+	// Environment variable: REVENIUM_CAPTURE_PROMPTS=true
+	CapturePrompts bool // When true, captures generation prompts for analytics (default: false)
+
 	// Logging configuration
 	LogLevel       string
 	VerboseStartup bool
@@ -73,6 +81,28 @@ func WithReveniumProductID(id string) Option {
 	}
 }
 
+// WithCapturePrompts enables/disables prompt capture for analytics.
+// When enabled, generation prompts are captured and sent with metering data.
+// Default is false (opt-in for privacy).
+//
+// Fields added to metering payload when enabled:
+//   - inputMessages: JSON array with [{"role": "user", "content": "<prompt>"}] format
+//   - outputResponse: Generated content URL(s) (images/videos)
+//   - promptsTruncated: true if prompt exceeded 50,000 characters
+//
+// Example:
+//
+//	revenium.Initialize(
+//	    revenium.WithCapturePrompts(true),
+//	)
+//
+// Environment variable alternative: REVENIUM_CAPTURE_PROMPTS=true
+func WithCapturePrompts(capture bool) Option {
+	return func(c *Config) {
+		c.CapturePrompts = capture
+	}
+}
+
 // loadFromEnv loads configuration from environment variables and .env files
 // Only loads values that are not already set programmatically
 func (c *Config) loadFromEnv() error {
@@ -109,6 +139,10 @@ func (c *Config) loadFromEnv() error {
 	}
 	if !c.VerboseStartup {
 		c.VerboseStartup = os.Getenv("REVENIUM_VERBOSE_STARTUP") == "true" || os.Getenv("REVENIUM_VERBOSE_STARTUP") == "1"
+	}
+	// CapturePrompts defaults to false (opt-in) - only load if not already set programmatically
+	if !c.CapturePrompts {
+		c.CapturePrompts = os.Getenv("REVENIUM_CAPTURE_PROMPTS") == "true" || os.Getenv("REVENIUM_CAPTURE_PROMPTS") == "1"
 	}
 
 	// Initialize logger early

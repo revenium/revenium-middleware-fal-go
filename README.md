@@ -87,6 +87,27 @@ The middleware automatically captures:
 - **Custom Metadata**: Business context you provide
 - **Error Tracking**: Failed requests and error details
 
+### Optional: Prompt Capture for Analytics
+
+Enable prompt capture to track generation prompts in the Revenium dashboard:
+
+```go
+// Enable prompt capture (opt-in, default: false)
+revenium.InitializeWithOptions(
+    revenium.WithCapturePrompts(true),
+)
+```
+
+When enabled, the following fields are added to metering payloads:
+
+| Field | Description |
+|-------|-------------|
+| `inputMessages` | JSON array with `[{"role": "user", "content": "<prompt>"}]` format |
+| `outputResponse` | Generated content URL(s) |
+| `promptsTruncated` | `true` if prompt exceeded 50,000 characters |
+
+**Privacy Note**: Prompt capture is opt-in by default. Only enable if your use case requires prompt analytics.
+
 ## Environment Variables
 
 ### Required
@@ -114,8 +135,41 @@ REVENIUM_METERING_BASE_URL=https://api.revenium.ai
 REVENIUM_ORGANIZATION_ID=my-company
 REVENIUM_PRODUCT_ID=my-app
 
+# Enable prompt capture for analytics (opt-in, default: false)
+# When enabled, generation prompts and output URLs are sent to Revenium
+REVENIUM_CAPTURE_PROMPTS=false
+
 # Debug logging
 REVENIUM_LOG_LEVEL=INFO
+```
+
+## Configuration Options
+
+The middleware supports both environment variables and programmatic configuration:
+
+| Option | Environment Variable | Default | Description |
+|--------|---------------------|---------|-------------|
+| Fal.ai API Key | `FAL_API_KEY` | (required) | Your Fal.ai API key |
+| Fal.ai Base URL | `FAL_BASE_URL` | `https://fal.run` | Fal.ai API endpoint |
+| Request Timeout | `FAL_REQUEST_TIMEOUT` | `30m` | HTTP request timeout |
+| Revenium API Key | `REVENIUM_METERING_API_KEY` | (required) | Your Revenium API key |
+| Revenium Base URL | `REVENIUM_METERING_BASE_URL` | `https://api.revenium.ai` | Revenium API endpoint |
+| Organization ID | `REVENIUM_ORGANIZATION_ID` | (optional) | Default organization ID |
+| Product ID | `REVENIUM_PRODUCT_ID` | (optional) | Default product ID |
+| Capture Prompts | `REVENIUM_CAPTURE_PROMPTS` | `false` | Enable prompt analytics |
+| Log Level | `REVENIUM_LOG_LEVEL` | `INFO` | Logging verbosity |
+| Verbose Startup | `REVENIUM_VERBOSE_STARTUP` | `false` | Show startup details |
+
+### Programmatic Configuration
+
+```go
+// Configure with functional options
+err := revenium.Initialize(
+    revenium.WithFalAPIKey("fal-api-key"),
+    revenium.WithReveniumAPIKey("hak_your_key"),
+    revenium.WithCapturePrompts(true),  // Enable prompt capture for analytics
+    revenium.WithRequestTimeout(10 * time.Minute),
+)
 ```
 
 ## Supported Models

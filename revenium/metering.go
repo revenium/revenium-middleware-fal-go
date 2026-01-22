@@ -143,6 +143,45 @@ func generateTransactionID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), time.Now().UnixNano()%1000)
 }
 
+// MaxPromptLength is the maximum length for captured prompts.
+// Prompts exceeding this length will be truncated with "...[TRUNCATED]" suffix.
+const MaxPromptLength = 50000
+
+// formatPromptAsInputMessages formats a single prompt string as JSON inputMessages
+// for compatibility with the Revenium dashboard's unified prompt view.
+//
+// Output format: [{"role": "user", "content": "<prompt>"}]
+//
+// This format matches the LLM middleware pattern, enabling the Revenium dashboard
+// to display prompts consistently across all AI providers (text, image, video).
+//
+// Returns:
+//   - JSON string: The formatted inputMessages JSON
+//   - bool: true if the prompt was truncated (exceeded MaxPromptLength)
+func formatPromptAsInputMessages(prompt string) (string, bool) {
+	if prompt == "" {
+		return "", false
+	}
+
+	truncated := false
+	if len(prompt) > MaxPromptLength {
+		prompt = prompt[:MaxPromptLength] + "...[TRUNCATED]"
+		truncated = true
+	}
+
+	messages := []map[string]string{
+		{"role": "user", "content": prompt},
+	}
+
+	jsonBytes, err := json.Marshal(messages)
+	if err != nil {
+		Warn("Failed to serialize prompt as inputMessages: %v", err)
+		return "", truncated
+	}
+
+	return string(jsonBytes), truncated
+}
+
 // normalizeModelName ensures the model name has the required "fal-ai/" prefix
 // for Revenium's model naming convention. Fal.ai endpoint IDs use the format
 // "fal-ai/flux/dev" which matches the billing API's endpoint_id field.
@@ -168,6 +207,9 @@ func buildImageMeteringPayload(
 	metadata map[string]interface{},
 	duration time.Duration,
 	requestTime time.Time,
+	capturePrompts bool,
+	prompt string,
+	outputURLs []string,
 ) *MeteringPayload {
 	payload := &MeteringPayload{
 		StopReason:       "END",
@@ -257,6 +299,25 @@ func buildImageMeteringPayload(
 		}
 	}
 
+	// Add prompt capture fields when enabled (opt-in)
+	if capturePrompts && prompt != "" {
+		inputMessages, truncated := formatPromptAsInputMessages(prompt)
+		if inputMessages != "" {
+			payload.InputMessages = inputMessages
+		}
+		if truncated {
+			payload.PromptsTruncated = true
+		}
+		// Output response contains the generated image URL(s)
+		if len(outputURLs) > 0 {
+			outputJSON, err := json.Marshal(outputURLs)
+			if err == nil {
+				payload.OutputResponse = string(outputJSON)
+			}
+		}
+		Debug("Prompt capture enabled: captured %d chars, output %d URLs", len(prompt), len(outputURLs))
+	}
+
 	return payload
 }
 
@@ -268,6 +329,9 @@ func buildVideoMeteringPayload(
 	duration time.Duration,
 	requestTime time.Time,
 	requestedDuration string,
+	capturePrompts bool,
+	prompt string,
+	outputURL string,
 ) *MeteringPayload {
 	payload := &MeteringPayload{
 		StopReason:       "END",
@@ -388,6 +452,22 @@ func buildVideoMeteringPayload(
 		if responseQualityScore, ok := metadata["responseQualityScore"].(float64); ok {
 			payload.ResponseQualityScore = &responseQualityScore
 		}
+	}
+
+	// Add prompt capture fields when enabled (opt-in)
+	if capturePrompts && prompt != "" {
+		inputMessages, truncated := formatPromptAsInputMessages(prompt)
+		if inputMessages != "" {
+			payload.InputMessages = inputMessages
+		}
+		if truncated {
+			payload.PromptsTruncated = true
+		}
+		// Output response contains the generated video URL
+		if outputURL != "" {
+			payload.OutputResponse = outputURL
+		}
+		Debug("Prompt capture enabled: captured %d chars, output URL: %s", len(prompt), outputURL)
 	}
 
 	return payload

@@ -25,10 +25,36 @@ cp .env.example .env
 ## Environment Variables
 
 ```bash
-FAL_KEY=your_fal_api_key
+# Required
+FAL_API_KEY=your_fal_api_key
 REVENIUM_METERING_API_KEY=your_revenium_key
+
+# Optional
 REVENIUM_METERING_BASE_URL=https://api.revenium.ai
+REVENIUM_CAPTURE_PROMPTS=true  # Enable prompt capture for analytics (default: false)
 ```
+
+## Prompt Capture Feature
+
+Enable prompt capture to track generation prompts in the Revenium dashboard:
+
+```go
+// Via environment variable
+// REVENIUM_CAPTURE_PROMPTS=true
+
+// Or programmatically
+revenium.Initialize(
+    revenium.WithCapturePrompts(true),
+)
+```
+
+When enabled, the following fields are added to metering payloads:
+
+| Field | Description |
+|-------|-------------|
+| `inputMessages` | JSON array: `[{"role": "user", "content": "<prompt>"}]` |
+| `outputResponse` | Generated content URL(s) |
+| `promptsTruncated` | `true` if prompt exceeded 50K characters |
 
 ## Supported Models
 
