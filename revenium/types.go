@@ -122,6 +122,12 @@ type MeteringPayload struct {
 	// Quality metrics
 	ResponseQualityScore *float64 `json:"responseQualityScore,omitempty"`
 
+	// Prompt capture fields (opt-in via CapturePrompts config)
+	// InputMessages format: [{"role": "user", "content": "<prompt>"}] for dashboard compatibility
+	InputMessages    string `json:"inputMessages,omitempty"`
+	OutputResponse   string `json:"outputResponse,omitempty"` // URL(s) of generated content
+	PromptsTruncated bool   `json:"promptsTruncated,omitempty"`
+
 	// Cost overrides
 	TotalCost        *float64 `json:"totalCost,omitempty"`
 }

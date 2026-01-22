@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.1] - 2026-01-22
+
+### Added
+- Opt-in prompt capture for analytics via `WithCapturePrompts(true)` option
+  - `inputMessages`: JSON array with role/content format for generation prompts
+  - `outputResponse`: Generated content URLs from Fal.ai
+  - `promptsTruncated`: Flag when prompt exceeds 50K character limit
+- Comprehensive examples demonstrating UsageMetadata fields
+
+### Fixed
+- Model name format now includes `fal-ai/` prefix for LiteLLM pricing compatibility
+  - Fal.ai models like `flux/dev` are now correctly sent as `fal-ai/flux/dev`
+  - Applies to both image and video generation endpoints
+
 ## [1.0.0] - 2026-01-09
 
 ### Added

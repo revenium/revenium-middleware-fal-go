@@ -132,6 +132,12 @@ func (r *ReveniumFal) GenerateImage(ctx context.Context, model string, request *
 	// Record start time
 	startTime := time.Now()
 
+	// Capture prompt before API call (for prompt capture feature)
+	var prompt string
+	if request != nil {
+		prompt = request.Prompt
+	}
+
 	// Call Fal.ai API
 	resp, err := r.falClient.GenerateImage(ctx, model, request)
 	if err != nil {
@@ -145,7 +151,7 @@ func (r *ReveniumFal) GenerateImage(ctx context.Context, model string, request *
 	r.wg.Add(1)
 	go func() {
 		defer r.wg.Done()
-		r.sendImageMetering(resp, model, metadata, duration, startTime)
+		r.sendImageMetering(resp, model, metadata, duration, startTime, prompt)
 	}()
 
 	return resp, nil
@@ -159,6 +165,15 @@ func (r *ReveniumFal) GenerateVideo(ctx context.Context, model string, request *
 	// Record start time
 	startTime := time.Now()
 
+	// Capture the requested duration and prompt before the goroutine
+	// Guard against nil request for defensive programming
+	var requestedDuration string
+	var prompt string
+	if request != nil {
+		requestedDuration = request.Duration
+		prompt = request.Prompt
+	}
+
 	// Call Fal.ai API
 	resp, err := r.falClient.GenerateVideo(ctx, model, request)
 	if err != nil {
@@ -168,32 +183,33 @@ func (r *ReveniumFal) GenerateVideo(ctx context.Context, model string, request *
 	// Calculate duration
 	duration := time.Since(startTime)
 
-	// Capture the requested duration before the goroutine
-	// Guard against nil request for defensive programming
-	var requestedDuration string
-	if request != nil {
-		requestedDuration = request.Duration
-	}
-
 	// Send metering data asynchronously (fire-and-forget)
 	r.wg.Add(1)
 	go func() {
 		defer r.wg.Done()
-		r.sendVideoMetering(resp, model, metadata, duration, startTime, requestedDuration)
+		r.sendVideoMetering(resp, model, metadata, duration, startTime, requestedDuration, prompt)
 	}()
 
 	return resp, nil
 }
 
 // sendImageMetering sends image metering data in the background
-func (r *ReveniumFal) sendImageMetering(resp *FalImageResponse, model string, metadata map[string]interface{}, duration time.Duration, startTime time.Time) {
+func (r *ReveniumFal) sendImageMetering(resp *FalImageResponse, model string, metadata map[string]interface{}, duration time.Duration, startTime time.Time, prompt string) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			Error("Metering goroutine panic: %v", rec)
 		}
 	}()
 
-	payload := buildImageMeteringPayload(model, resp, metadata, duration, startTime)
+	// Capture output URLs for prompt capture
+	var outputURLs []string
+	if resp != nil {
+		for _, img := range resp.Images {
+			outputURLs = append(outputURLs, img.URL)
+		}
+	}
+
+	payload := buildImageMeteringPayload(model, resp, metadata, duration, startTime, r.config.CapturePrompts, prompt, outputURLs)
 
 	if err := r.meteringClient.SendImageMetering(payload); err != nil {
 		Error("Failed to send image metering data: %v", err)
@@ -201,14 +217,20 @@ func (r *ReveniumFal) sendImageMetering(resp *FalImageResponse, model string, me
 }
 
 // sendVideoMetering sends video metering data in the background
-func (r *ReveniumFal) sendVideoMetering(resp *FalVideoResponse, model string, metadata map[string]interface{}, duration time.Duration, startTime time.Time, requestedDuration string) {
+func (r *ReveniumFal) sendVideoMetering(resp *FalVideoResponse, model string, metadata map[string]interface{}, duration time.Duration, startTime time.Time, requestedDuration string, prompt string) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			Error("Metering goroutine panic: %v", rec)
 		}
 	}()
 
-	payload := buildVideoMeteringPayload(model, resp, metadata, duration, startTime, requestedDuration)
+	// Capture output URL for prompt capture
+	var outputURL string
+	if resp != nil && resp.Video.URL != "" {
+		outputURL = resp.Video.URL
+	}
+
+	payload := buildVideoMeteringPayload(model, resp, metadata, duration, startTime, requestedDuration, r.config.CapturePrompts, prompt, outputURL)
 
 	if err := r.meteringClient.SendVideoMetering(payload); err != nil {
 		Error("Failed to send video metering data: %v", err)

@@ -13,10 +13,24 @@ func main() {
 	fmt.Println("=== Revenium Middleware - Fal.ai Basic Example ===")
 	fmt.Println()
 
-	// Initialize the middleware
-	if err := revenium.Initialize(); err != nil {
+	// Initialize the middleware with optional prompt capture
+	// Option 1: Basic initialization (uses environment variables)
+	// if err := revenium.Initialize(); err != nil {
+	//     log.Fatalf("Failed to initialize middleware: %v", err)
+	// }
+
+	// Option 2: Initialize with programmatic options
+	// Enable prompt capture for analytics (opt-in, default: false)
+	// When enabled, generation prompts are captured and sent with metering data
+	// Fields added: inputMessages, outputResponse, promptsTruncated
+	if err := revenium.Initialize(
+		revenium.WithCapturePrompts(true), // Enable prompt capture for analytics
+	); err != nil {
 		log.Fatalf("Failed to initialize middleware: %v", err)
 	}
+
+	// Alternative: Set via environment variable
+	// REVENIUM_CAPTURE_PROMPTS=true
 
 	// Get the client
 	client, err := revenium.GetClient()
@@ -59,6 +73,10 @@ func generateImageExample(client *revenium.ReveniumFal) error {
 	ctx = revenium.WithUsageMetadata(ctx, metadata)
 
 	// Create image generation request
+	// Note: When CapturePrompts is enabled, the Prompt field will be captured
+	// and sent to Revenium as inputMessages in the format:
+	// [{"role": "user", "content": "<prompt>"}]
+	// The generated image URL(s) will be captured as outputResponse
 	request := &revenium.FalRequest{
 		Prompt:    "A serene landscape with mountains and a lake at sunset",
 		ImageSize: "landscape_4_3",
@@ -101,6 +119,9 @@ func generateVideoExample(client *revenium.ReveniumFal) error {
 	ctx = revenium.WithUsageMetadata(ctx, metadata)
 
 	// Create video generation request - use shortest duration (5s) for faster testing
+	// Note: When CapturePrompts is enabled, the Prompt field will be captured
+	// and sent to Revenium. The generated video URL will be captured as outputResponse
+	// Prompts exceeding 50,000 characters will be truncated (promptsTruncated=true)
 	request := &revenium.FalRequest{
 		Prompt:   "A drone flying over a futuristic city at night",
 		Duration: "5", // Shortest possible video (5 seconds)
