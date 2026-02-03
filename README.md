@@ -93,7 +93,7 @@ Enable prompt capture to track generation prompts in the Revenium dashboard:
 
 ```go
 // Enable prompt capture (opt-in, default: false)
-revenium.InitializeWithOptions(
+revenium.Initialize(
     revenium.WithCapturePrompts(true),
 )
 ```
