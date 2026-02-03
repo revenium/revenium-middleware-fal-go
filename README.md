@@ -108,6 +108,30 @@ When enabled, the following fields are added to metering payloads:
 
 **Privacy Note**: Prompt capture is opt-in by default. Only enable if your use case requires prompt analytics.
 
+### Custom Metadata
+
+Add business context to requests using metadata:
+
+```go
+metadata := map[string]interface{}{
+    "organizationName": "my-company",
+    "productName":      "my-app",
+    "totalCost":        0.05,  // Override cost when provider pricing unavailable
+    "subscriber": map[string]interface{}{
+        "id":    "user-123",
+        "email": "user@example.com",
+    },
+}
+ctx = revenium.WithUsageMetadata(ctx, metadata)
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `organizationName` | string | Human-readable organization name |
+| `productName` | string | Human-readable product name |
+| `totalCost` | number | Cost override (float64 or int accepted) |
+| `subscriber` | object | End-user identification |
+
 ## Environment Variables
 
 ### Required

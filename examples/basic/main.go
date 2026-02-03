@@ -62,13 +62,13 @@ func generateImageExample(client *revenium.ReveniumFal) error {
 	// Create context with custom metadata
 	ctx := context.Background()
 	metadata := map[string]interface{}{
-		"organizationId": "org-fal-example",
-		"productId":      "product-image-gen",
+		"organizationName": "my-company",
+		"productName":      "image-gen-app",
+		"totalCost":        0.05, // Optional: override cost when provider pricing unavailable
 		"subscriber": map[string]interface{}{
 			"id":    "user-123",
 			"email": "user@example.com",
 		},
-		"taskType": "image-generation",
 	}
 	ctx = revenium.WithUsageMetadata(ctx, metadata)
 
@@ -108,13 +108,13 @@ func generateVideoExample(client *revenium.ReveniumFal) error {
 	// Create context with custom metadata
 	ctx := context.Background()
 	metadata := map[string]interface{}{
-		"organizationId": "org-fal-example",
-		"productId":      "product-video-gen",
+		"organizationName": "my-company",
+		"productName":      "video-gen-app",
+		"totalCost":        0.50, // Optional: override cost when provider pricing unavailable
 		"subscriber": map[string]interface{}{
 			"id":    "user-123",
 			"email": "user@example.com",
 		},
-		"taskType": "video-generation",
 	}
 	ctx = revenium.WithUsageMetadata(ctx, metadata)
 
