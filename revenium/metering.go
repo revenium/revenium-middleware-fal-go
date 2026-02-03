@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // Package-level HTTP client with connection pooling for metering requests.
@@ -143,9 +144,13 @@ func generateTransactionID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), time.Now().UnixNano()%1000)
 }
 
-// MaxPromptLength is the maximum length for captured prompts.
-// Prompts exceeding this length will be truncated with "...[TRUNCATED]" suffix.
+// MaxPromptLength is the maximum length for captured prompts (in runes).
+// Prompts exceeding this length will be truncated with the TruncationSuffix.
+// The final output will never exceed MaxPromptLength runes.
 const MaxPromptLength = 50000
+
+// TruncationSuffix is appended to truncated prompts.
+const TruncationSuffix = "...[TRUNCATED]"
 
 // formatPromptAsInputMessages formats a single prompt string as JSON inputMessages
 // for compatibility with the Revenium dashboard's unified prompt view.
@@ -164,8 +169,13 @@ func formatPromptAsInputMessages(prompt string) (string, bool) {
 	}
 
 	truncated := false
-	if len(prompt) > MaxPromptLength {
-		prompt = prompt[:MaxPromptLength] + "...[TRUNCATED]"
+	runeCount := utf8.RuneCountInString(prompt)
+	if runeCount > MaxPromptLength {
+		// Truncate to MaxPromptLength minus suffix length to ensure final output doesn't exceed limit
+		truncateAt := MaxPromptLength - utf8.RuneCountInString(TruncationSuffix)
+		// Convert to rune slice for proper Unicode handling
+		runes := []rune(prompt)
+		prompt = string(runes[:truncateAt]) + TruncationSuffix
 		truncated = true
 	}
 

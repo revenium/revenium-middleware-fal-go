@@ -31,6 +31,10 @@ type Config struct {
 	// Environment variable: REVENIUM_CAPTURE_PROMPTS=true
 	CapturePrompts bool // When true, captures generation prompts for analytics (default: false)
 
+	// Internal: tracks whether CapturePrompts was explicitly set via WithCapturePrompts.
+	// When true, environment variable will NOT override the programmatic setting.
+	capturePromptsSet bool
+
 	// Logging configuration
 	LogLevel       string
 	VerboseStartup bool
@@ -85,6 +89,10 @@ func WithReveniumProductID(id string) Option {
 // When enabled, generation prompts are captured and sent with metering data.
 // Default is false (opt-in for privacy).
 //
+// Note: When this option is used, it takes precedence over the
+// REVENIUM_CAPTURE_PROMPTS environment variable. This ensures predictable
+// behavior when the caller explicitly configures this setting.
+//
 // Fields added to metering payload when enabled:
 //   - inputMessages: JSON array with [{"role": "user", "content": "<prompt>"}] format
 //   - outputResponse: Generated content URL(s) (images/videos)
@@ -100,6 +108,7 @@ func WithReveniumProductID(id string) Option {
 func WithCapturePrompts(capture bool) Option {
 	return func(c *Config) {
 		c.CapturePrompts = capture
+		c.capturePromptsSet = true // Mark as explicitly set - env var won't override
 	}
 }
 
@@ -148,8 +157,9 @@ func (c *Config) loadFromEnv() error {
 	if !c.VerboseStartup {
 		c.VerboseStartup = os.Getenv("REVENIUM_VERBOSE_STARTUP") == "true" || os.Getenv("REVENIUM_VERBOSE_STARTUP") == "1"
 	}
-	// CapturePrompts defaults to false (opt-in) - only load if not already set programmatically
-	if !c.CapturePrompts {
+	// CapturePrompts defaults to false (opt-in) - only load from env if not explicitly set via WithCapturePrompts.
+	// This ensures programmatic settings (both true AND false) take precedence over environment variables.
+	if !c.capturePromptsSet {
 		c.CapturePrompts = os.Getenv("REVENIUM_CAPTURE_PROMPTS") == "true" || os.Getenv("REVENIUM_CAPTURE_PROMPTS") == "1"
 	}
 
