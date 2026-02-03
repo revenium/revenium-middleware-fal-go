@@ -242,6 +242,14 @@ func buildImageMeteringPayload(
 
 	// Add metadata fields
 	if metadata != nil {
+		// New preferred names
+		if orgName, ok := metadata["organizationName"].(string); ok {
+			payload.OrganizationName = orgName
+		}
+		if productName, ok := metadata["productName"].(string); ok {
+			payload.ProductName = productName
+		}
+		// Deprecated fields (kept for backward compatibility)
 		if orgID, ok := metadata["organizationId"].(string); ok {
 			payload.OrganizationID = orgID
 		}
@@ -296,6 +304,10 @@ func buildImageMeteringPayload(
 		}
 		if responseQualityScore, ok := metadata["responseQualityScore"].(float64); ok {
 			payload.ResponseQualityScore = &responseQualityScore
+		}
+		// Cost override - allows custom pricing when provider pricing unavailable
+		if totalCost, ok := metadata["totalCost"].(float64); ok {
+			payload.TotalCost = &totalCost
 		}
 	}
 
@@ -397,6 +409,14 @@ func buildVideoMeteringPayload(
 
 	// Add metadata fields
 	if metadata != nil {
+		// New preferred names
+		if orgName, ok := metadata["organizationName"].(string); ok {
+			payload.OrganizationName = orgName
+		}
+		if productName, ok := metadata["productName"].(string); ok {
+			payload.ProductName = productName
+		}
+		// Deprecated fields (kept for backward compatibility)
 		if orgID, ok := metadata["organizationId"].(string); ok {
 			payload.OrganizationID = orgID
 		}
@@ -451,6 +471,10 @@ func buildVideoMeteringPayload(
 		}
 		if responseQualityScore, ok := metadata["responseQualityScore"].(float64); ok {
 			payload.ResponseQualityScore = &responseQualityScore
+		}
+		// Cost override - allows custom pricing when provider pricing unavailable
+		if totalCost, ok := metadata["totalCost"].(float64); ok {
+			payload.TotalCost = &totalCost
 		}
 	}
 

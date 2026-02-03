@@ -98,9 +98,13 @@ type MeteringPayload struct {
 	// Image/Video metadata (in attributes, not billing)
 	Attributes map[string]interface{} `json:"attributes,omitempty"`
 
-	// Optional business context
-	OrganizationID   string                 `json:"organizationId,omitempty"`
-	ProductID        string                 `json:"productId,omitempty"`
+	// Optional business context - new preferred names
+	OrganizationName string `json:"organizationName,omitempty"`
+	ProductName      string `json:"productName,omitempty"`
+	// Deprecated: Use OrganizationName instead
+	OrganizationID string `json:"organizationId,omitempty"`
+	// Deprecated: Use ProductName instead
+	ProductID string `json:"productId,omitempty"`
 	TaskType         string                 `json:"taskType,omitempty"`
 	Agent            string                 `json:"agent,omitempty"`
 	SubscriptionID   string                 `json:"subscriptionId,omitempty"`
