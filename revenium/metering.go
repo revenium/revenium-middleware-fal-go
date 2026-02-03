@@ -306,8 +306,12 @@ func buildImageMeteringPayload(
 			payload.ResponseQualityScore = &responseQualityScore
 		}
 		// Cost override - allows custom pricing when provider pricing unavailable
+		// Handle both float64 and int to avoid silent failures with integer literals
 		if totalCost, ok := metadata["totalCost"].(float64); ok {
 			payload.TotalCost = &totalCost
+		} else if totalCostInt, ok := metadata["totalCost"].(int); ok {
+			totalCostFloat := float64(totalCostInt)
+			payload.TotalCost = &totalCostFloat
 		}
 	}
 
@@ -473,8 +477,12 @@ func buildVideoMeteringPayload(
 			payload.ResponseQualityScore = &responseQualityScore
 		}
 		// Cost override - allows custom pricing when provider pricing unavailable
+		// Handle both float64 and int to avoid silent failures with integer literals
 		if totalCost, ok := metadata["totalCost"].(float64); ok {
 			payload.TotalCost = &totalCost
+		} else if totalCostInt, ok := metadata["totalCost"].(int); ok {
+			totalCostFloat := float64(totalCostInt)
+			payload.TotalCost = &totalCostFloat
 		}
 	}
 

@@ -128,10 +128,18 @@ func (c *Config) loadFromEnv() error {
 		c.ReveniumBaseURL = NormalizeReveniumBaseURL(baseURL)
 	}
 	if c.ReveniumOrgID == "" {
-		c.ReveniumOrgID = os.Getenv("REVENIUM_ORGANIZATION_ID")
+		// Prefer new _NAME env vars, fall back to legacy _ID
+		c.ReveniumOrgID = os.Getenv("REVENIUM_ORGANIZATION_NAME")
+		if c.ReveniumOrgID == "" {
+			c.ReveniumOrgID = os.Getenv("REVENIUM_ORGANIZATION_ID")
+		}
 	}
 	if c.ReveniumProductID == "" {
-		c.ReveniumProductID = os.Getenv("REVENIUM_PRODUCT_ID")
+		// Prefer new _NAME env vars, fall back to legacy _ID
+		c.ReveniumProductID = os.Getenv("REVENIUM_PRODUCT_NAME")
+		if c.ReveniumProductID == "" {
+			c.ReveniumProductID = os.Getenv("REVENIUM_PRODUCT_ID")
+		}
 	}
 
 	if c.LogLevel == "" {
