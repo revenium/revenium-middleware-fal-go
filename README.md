@@ -93,7 +93,7 @@ Enable prompt capture to track generation prompts in the Revenium dashboard:
 
 ```go
 // Enable prompt capture (opt-in, default: false)
-revenium.InitializeWithOptions(
+revenium.Initialize(
     revenium.WithCapturePrompts(true),
 )
 ```
@@ -131,9 +131,9 @@ FAL_REQUEST_TIMEOUT=30m
 # Revenium API base URL (defaults to production)
 REVENIUM_METERING_BASE_URL=https://api.revenium.ai
 
-# Default metadata for all requests
-REVENIUM_ORGANIZATION_ID=my-company
-REVENIUM_PRODUCT_ID=my-app
+# Default metadata for all requests (human-readable names preferred)
+REVENIUM_ORGANIZATION_NAME=my-company
+REVENIUM_PRODUCT_NAME=my-app
 
 # Enable prompt capture for analytics (opt-in, default: false)
 # When enabled, generation prompts and output URLs are sent to Revenium
@@ -154,8 +154,8 @@ The middleware supports both environment variables and programmatic configuratio
 | Request Timeout | `FAL_REQUEST_TIMEOUT` | `30m` | HTTP request timeout |
 | Revenium API Key | `REVENIUM_METERING_API_KEY` | (required) | Your Revenium API key |
 | Revenium Base URL | `REVENIUM_METERING_BASE_URL` | `https://api.revenium.ai` | Revenium API endpoint |
-| Organization ID | `REVENIUM_ORGANIZATION_ID` | (optional) | Default organization ID |
-| Product ID | `REVENIUM_PRODUCT_ID` | (optional) | Default product ID |
+| Organization Name | `REVENIUM_ORGANIZATION_NAME` | (optional) | Human-readable organization name (preferred) |
+| Product Name | `REVENIUM_PRODUCT_NAME` | (optional) | Human-readable product name (preferred) |
 | Capture Prompts | `REVENIUM_CAPTURE_PROMPTS` | `false` | Enable prompt analytics |
 | Log Level | `REVENIUM_LOG_LEVEL` | `INFO` | Logging verbosity |
 | Verbose Startup | `REVENIUM_VERBOSE_STARTUP` | `false` | Show startup details |
