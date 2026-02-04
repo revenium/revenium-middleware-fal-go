@@ -116,6 +116,7 @@ Add business context to requests using metadata:
 metadata := map[string]interface{}{
     "organizationName": "my-company",
     "productName":      "my-app",
+    "taskType":         "image-generation",  // Categorize by task type
     "totalCost":        0.05,  // Override cost when provider pricing unavailable
     "subscriber": map[string]interface{}{
         "id":    "user-123",
@@ -129,8 +130,46 @@ ctx = revenium.WithUsageMetadata(ctx, metadata)
 |-------|------|-------------|
 | `organizationName` | string | Human-readable organization name |
 | `productName` | string | Human-readable product name |
+| `taskType` | string | Task category (e.g., "image-generation", "video-generation") |
 | `totalCost` | number | Cost override (float64 or int accepted) |
 | `subscriber` | object | End-user identification |
+| `agent` | string | AI agent or workflow identifier |
+
+### Trace Visualization Fields
+
+For distributed tracing and advanced analytics, add trace fields to your metadata:
+
+```go
+metadata := map[string]interface{}{
+    "organizationName": "my-company",
+    "productName":      "my-app",
+    "taskType":         "video-generation",
+    // Trace visualization fields
+    "traceId":              "child-session-67890",     // This request's trace ID
+    "parentTransactionId":  "parent-session-12345",    // Parent's traceId to link child to parent
+    "environment":          "production",              // Deployment environment
+    "region":               "us-east-1",               // Cloud region
+    "traceType":            "media-pipeline",          // Workflow category
+    "traceName":            "Video Generation Job",    // Human-readable trace label
+    "credentialAlias":      "fal-prod-key",            // Track which API key was used
+    "retryNumber":          0,                         // Retry attempt (0 = first try)
+}
+ctx = revenium.WithUsageMetadata(ctx, metadata)
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `traceId` | string | Unique identifier to link related requests |
+| `parentTransactionId` | string | Your ID for the parent operation (use parent's `traceId` to link child requests) |
+| `environment` | string | Deployment environment (e.g., "production", "staging") |
+| `region` | string | Cloud region identifier (e.g., "us-east-1") |
+| `traceType` | string | Workflow category for grouping similar traces |
+| `traceName` | string | Human-readable label for the trace |
+| `credentialAlias` | string | Human-readable name for the API key used |
+| `retryNumber` | int | Retry attempt number (0 for first attempt) |
+| `taskId` | string | Unique task identifier for job tracking |
+| `videoJobId` | string | Video generation job ID (Fal.ai specific) |
+| `audioJobId` | string | Audio generation job ID (Fal.ai specific) |
 
 ## Environment Variables
 
