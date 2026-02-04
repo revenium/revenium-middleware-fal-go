@@ -21,6 +21,36 @@ cp .env.example .env
 | Example | Description | Run |
 |---------|-------------|-----|
 | `basic/` | Image and video generation with Flux/Kling | `go run examples/basic/main.go` |
+| `tracing/` | Distributed tracing, retry tracking, environment/region | `go run examples/tracing/main.go` |
+
+## Metadata Fields
+
+All metadata fields are optional. Add business context to your requests:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `organizationName` | string | Human-readable organization name |
+| `productName` | string | Human-readable product name |
+| `taskType` | string | Task category (e.g., "image-generation", "video-generation") |
+| `totalCost` | number | Cost override when provider pricing unavailable |
+| `subscriber` | object | End-user identification (`id`, `email`) |
+| `agent` | string | AI agent or workflow identifier |
+
+### Trace Visualization Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `traceId` | string | Link related requests together |
+| `parentTransactionId` | string | Your ID for the parent operation (links child to parent) |
+| `environment` | string | Deployment environment (e.g., "production") |
+| `region` | string | Cloud region (e.g., "us-east-1") |
+| `traceType` | string | Workflow category for grouping traces |
+| `traceName` | string | Human-readable trace label |
+| `credentialAlias` | string | API key identifier for auditing |
+| `retryNumber` | int | Retry attempt (0 = first attempt) |
+| `taskId` | string | Unique task identifier for job tracking |
+| `videoJobId` | string | Video generation job ID (Fal.ai specific) |
+| `audioJobId` | string | Audio generation job ID (Fal.ai specific) |
 
 ## Environment Variables
 

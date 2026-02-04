@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Allows custom pricing when provider pricing unavailable in LiteLLM database
   - Useful for enterprise agreements or volume discounts
 
+### Documentation
+- Added `taskType` metadata field for task categorization
+- Added Trace Visualization Fields section with 11 fields for distributed tracing
+- Added `examples/tracing/` demonstrating distributed tracing, retry tracking, and trace categorization
+
 ## [1.0.1] - 2026-01-22
 
 ### Added
