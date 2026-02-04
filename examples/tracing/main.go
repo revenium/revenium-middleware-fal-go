@@ -72,6 +72,9 @@ func main() {
 
 // truncateURL safely truncates a URL for display, returning at most maxLen characters
 func truncateURL(url string, maxLen int) string {
+	if maxLen <= 0 {
+		return ""
+	}
 	if len(url) <= maxLen {
 		return url
 	}
