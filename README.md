@@ -145,8 +145,8 @@ metadata := map[string]interface{}{
     "productName":      "my-app",
     "taskType":         "video-generation",
     // Trace visualization fields
-    "traceId":              "child-session-67890",     // This request's trace ID
-    "parentTransactionId":  "parent-session-12345",    // Parent's traceId to link child to parent
+    "traceId":              "session-12345",           // Link related requests
+    "parentTransactionId":  "parent-txn-abc",          // Your ID for the parent operation
     "environment":          "production",              // Deployment environment
     "region":               "us-east-1",               // Cloud region
     "traceType":            "media-pipeline",          // Workflow category

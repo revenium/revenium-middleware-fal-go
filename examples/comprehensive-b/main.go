@@ -28,8 +28,8 @@ import (
 func GetScenarioBMetadata() map[string]interface{} {
 	return map[string]interface{}{
 		// Business Context - ALL DIFFERENT FROM SCENARIO A
-		"organizationId": "org-startup-xyz-staging",           // Different: was "org-acme-corporation-prod"
-		"productId":      "prod-mvp-image-api-beta",           // Different: was "prod-creative-suite-enterprise-v3"
+		"organizationName": "org-startup-xyz-staging",           // Different: was "org-acme-corporation-prod"
+		"productName":      "prod-mvp-image-api-beta",           // Different: was "prod-creative-suite-enterprise-v3"
 		"subscriptionId": "sub-freemium-trial-2026-jan",       // Different: was "sub-enterprise-annual-2026-q1"
 		"taskType":       "prototype-asset-creation",          // Different: was "creative-asset-generation"
 		"agent":          "dev-worker-local-macbook-01",       // Different: was "media-worker-us-west-2-node-07"

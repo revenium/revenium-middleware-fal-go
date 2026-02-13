@@ -69,6 +69,7 @@ func generateImageExample(client *revenium.ReveniumFal) error {
 			"id":    "user-123",
 			"email": "user@example.com",
 		},
+		"taskType": "image-generation",
 	}
 	ctx = revenium.WithUsageMetadata(ctx, metadata)
 
@@ -115,6 +116,7 @@ func generateVideoExample(client *revenium.ReveniumFal) error {
 			"id":    "user-123",
 			"email": "user@example.com",
 		},
+		"taskType": "video-generation",
 	}
 	ctx = revenium.WithUsageMetadata(ctx, metadata)
 
