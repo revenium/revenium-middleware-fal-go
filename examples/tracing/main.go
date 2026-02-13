@@ -70,18 +70,12 @@ func main() {
 	}
 }
 
-// truncateURL safely truncates a URL for display, returning at most maxLen characters
+// truncateURL safely truncates a URL for display
 func truncateURL(url string, maxLen int) string {
-	if maxLen <= 0 {
-		return ""
-	}
 	if len(url) <= maxLen {
 		return url
 	}
-	if maxLen <= 3 {
-		return url[:maxLen]
-	}
-	return url[:maxLen-3] + "..."
+	return url[:maxLen] + "..."
 }
 
 func basicTracingExample(client *revenium.ReveniumFal) error {

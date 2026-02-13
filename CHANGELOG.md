@@ -5,20 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.2] - 2026-02-03
+## [1.0.3] - 2026-02-08
+
+### Fixed
+- BACK-452: Align model name and provider with LiteLLM naming convention
+  - Model names now use full `fal_ai/fal-ai/{endpoint}` format matching backend's LiteLLM sync
+  - Provider field changed from `fal` to `fal_ai` to match COALESCE pricing query
+  - `normalizeModelName()` handles all input formats idempotently
+  - Fixes multimodal pricing lookup failures caused by provider/model mismatch
+
+### Changed
+- BACK-456: Updated examples and documentation to use `organizationName` and `productName` as preferred fields
+  - Human-readable names provide better UX in Revenium dashboard
+  - Legacy `organizationId`/`productId` fields still supported for backwards compatibility
 
 ### Added
-- **Organization & Product Names** - New `organizationName` and `productName` metadata fields
-  - Human-readable names provide better UX in Revenium dashboard
-  - Legacy `organizationId`/`productId` fields remain supported for backwards compatibility
-- **Custom Pricing Support** - `totalCost` metadata field for cost override
-  - Allows custom pricing when provider pricing unavailable in LiteLLM database
-  - Useful for enterprise agreements or volume discounts
-
-### Documentation
-- Added `taskType` metadata field for task categorization
-- Added Trace Visualization Fields section with 11 fields for distributed tracing
-- Added `examples/tracing/` demonstrating distributed tracing, retry tracking, and trace categorization
+- Unit tests for `normalizeModelName()` covering all input format variations and idempotency
 
 ## [1.0.1] - 2026-01-22
 

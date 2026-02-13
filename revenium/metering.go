@@ -192,22 +192,43 @@ func formatPromptAsInputMessages(prompt string) (string, bool) {
 	return string(jsonBytes), truncated
 }
 
-// normalizeModelName ensures the model name has the required "fal-ai/" prefix
-// for Revenium's model naming convention. Fal.ai endpoint IDs use the format
-// "fal-ai/flux/dev" which matches the billing API's endpoint_id field.
+// normalizeModelName ensures the model name follows the LiteLLM naming convention
+// used by the Revenium backend: "fal_ai/{fal_endpoint_id}".
 //
-// IMPORTANT: Users should pass the canonical model name with the "fal-ai/" prefix.
-// This function provides backward compatibility but will log a warning when
-// normalization is applied, as it indicates incorrect usage.
+// This matches the format stored in the AIModel table after LiteLLM sync, enabling
+// the pricing dimension lookup query to find matching pricing entries.
+//
+// Examples:
+//
+//	"flux/dev"                    → "fal_ai/fal-ai/flux/dev"
+//	"fal-ai/flux/dev"            → "fal_ai/fal-ai/flux/dev"
+//	"fal_ai/fal-ai/flux/dev"    → "fal_ai/fal-ai/flux/dev" (already correct)
+//	"fal_ai/flux/dev"            → "fal_ai/fal-ai/flux/dev" (missing inner segment)
 func normalizeModelName(model string) string {
-	const falPrefix = "fal-ai/"
-	if strings.HasPrefix(model, falPrefix) {
+	const litellmPrefix = "fal_ai/"
+	const falEndpointPrefix = "fal-ai/"
+
+	// Already in full LiteLLM format (fal_ai/fal-ai/...)
+	if strings.HasPrefix(model, litellmPrefix+falEndpointPrefix) {
 		return model
 	}
-	// Log warning when normalization is needed - indicates user passed incorrect format
-	Warn("Model name '%s' is missing 'fal-ai/' prefix. Use canonical format 'fal-ai/%s' for clarity. Auto-normalizing to '%s%s'",
-		model, model, falPrefix, model)
-	return falPrefix + model
+
+	// Has fal_ai/ prefix but missing fal-ai/ segment (e.g., "fal_ai/flux/dev")
+	if strings.HasPrefix(model, litellmPrefix) {
+		remainder := strings.TrimPrefix(model, litellmPrefix)
+		Warn("Model name '%s' has 'fal_ai/' prefix but missing 'fal-ai/' segment. Auto-normalizing.", model)
+		return litellmPrefix + falEndpointPrefix + remainder
+	}
+
+	// Has fal-ai/ endpoint prefix but not litellm prefix - prepend fal_ai/
+	if strings.HasPrefix(model, falEndpointPrefix) {
+		return litellmPrefix + model
+	}
+
+	// Bare model name (e.g., "flux/dev") - add both prefixes
+	Warn("Model name '%s' is missing 'fal-ai/' prefix. Auto-normalizing to '%s%s%s'",
+		model, litellmPrefix, falEndpointPrefix, model)
+	return litellmPrefix + falEndpointPrefix + model
 }
 
 // buildImageMeteringPayload builds a metering payload for image generation
@@ -226,7 +247,7 @@ func buildImageMeteringPayload(
 		CostType:         "AI",
 		OperationType:    string(OperationTypeImage),
 		Model:            normalizeModelName(model),
-		Provider:         "fal",
+		Provider:         "fal_ai",
 		ModelSource:      "FAL",
 		TransactionID:    generateTransactionID(),
 		RequestTime:      requestTime,
@@ -364,7 +385,7 @@ func buildVideoMeteringPayload(
 		CostType:         "AI",
 		OperationType:    string(OperationTypeVideo),
 		Model:            normalizeModelName(model),
-		Provider:         "fal",
+		Provider:         "fal_ai",
 		ModelSource:      "FAL",
 		TransactionID:    generateTransactionID(),
 		RequestTime:      requestTime,

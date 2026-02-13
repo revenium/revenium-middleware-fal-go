@@ -41,7 +41,7 @@ All metadata fields are optional. Add business context to your requests:
 | Field | Type | Description |
 |-------|------|-------------|
 | `traceId` | string | Link related requests together |
-| `parentTransactionId` | string | Your ID for the parent operation (use parent's `traceId` to link child requests) |
+| `parentTransactionId` | string | Your ID for the parent operation (links child to parent) |
 | `environment` | string | Deployment environment (e.g., "production") |
 | `region` | string | Cloud region (e.g., "us-east-1") |
 | `traceType` | string | Workflow category for grouping traces |

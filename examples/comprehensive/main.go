@@ -24,8 +24,9 @@ import (
 // This struct documents every field available in the Revenium metering API for Fal.ai middleware.
 type ComprehensiveMetadata struct {
 	// Business Context - Core identifiers for billing and attribution
-	OrganizationID string                 // Customer organization identifier
-	ProductID      string                 // Product/service being used
+	// BACK-456: Use organizationName and productName (human-readable) as preferred fields
+	OrganizationName string                 // Human-readable organization name (preferred)
+	ProductName      string                 // Human-readable product name (preferred)
 	SubscriptionID string                 // Subscription plan identifier
 	TaskType       string                 // Type of AI task (image-generation, video-generation, etc.)
 	Agent          string                 // Agent/worker identifier for distributed systems
@@ -58,9 +59,9 @@ type ComprehensiveMetadata struct {
 // These values represent what a real production customer might use.
 func GetRealisticEnterpriseMetadata() *ComprehensiveMetadata {
 	return &ComprehensiveMetadata{
-		// Business Context
-		OrganizationID: "org-acme-corporation-prod",
-		ProductID:      "prod-creative-suite-enterprise-v3",
+		// Business Context - Human-readable names (BACK-456)
+		OrganizationName: "Acme Corporation",
+		ProductName:      "Creative Suite Enterprise",
 		SubscriptionID: "sub-enterprise-annual-2026-q1",
 		TaskType:       "creative-asset-generation",
 		Agent:          "media-worker-us-west-2-node-07",
@@ -109,9 +110,9 @@ func GetRealisticEnterpriseMetadata() *ComprehensiveMetadata {
 // ToContextMetadata converts ComprehensiveMetadata to the map format expected by WithUsageMetadata
 func (m *ComprehensiveMetadata) ToContextMetadata() map[string]interface{} {
 	return map[string]interface{}{
-		// Business Context
-		"organizationId": m.OrganizationID,
-		"productId":      m.ProductID,
+		// Business Context - Human-readable names (BACK-456)
+		"organizationName": m.OrganizationName,
+		"productName":      m.ProductName,
 		"subscriptionId": m.SubscriptionID,
 		"taskType":       m.TaskType,
 		"agent":          m.Agent,
