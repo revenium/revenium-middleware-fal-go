@@ -8,16 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.3] - 2026-02-08
 
 ### Fixed
-- BACK-452: Align model name and provider with LiteLLM naming convention
-  - Model names now use full `fal_ai/fal-ai/{endpoint}` format matching backend's LiteLLM sync
-  - Provider field changed from `fal` to `fal_ai` to match COALESCE pricing query
-  - `normalizeModelName()` handles all input formats idempotently
-  - Fixes multimodal pricing lookup failures caused by provider/model mismatch
+- Fix model name and provider format to ensure accurate usage pricing
 
 ### Changed
-- BACK-456: Updated examples and documentation to use `organizationName` and `productName` as preferred fields
-  - Human-readable names provide better UX in Revenium dashboard
-  - Legacy `organizationId`/`productId` fields still supported for backwards compatibility
+- Updated examples and documentation to use `organizationName` and `productName` as preferred fields
 
 ### Added
 - Unit tests for `normalizeModelName()` covering all input format variations and idempotency
